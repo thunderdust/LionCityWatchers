@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">Lion City Watchers</string>
+    
+    <!-- Strings related to login and register -->
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="prompt_password_retype">Enter Password Again</string>
+    <string name="prompt_username">Username</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="action_sign_up">Sign up</string>
+    <string name="action_sign_up_short">Sign up</string>
+    <string name="register_title">Sign Up To Be A Watcher for Lion City</string>
+    <string name="error_invalid_email">This email address is invalid</string>
+    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_unmatched_password">Passwords are not matched</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="permission_rationale">"Contacts permissions are needed for providing email
+        completions."</string>
+    <string name="dialog_title_error_register">Register encountered error</string>
+    <string name="dialog_button_retry">Retry</string>
+</resources>
