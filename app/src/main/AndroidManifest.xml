@@ -22,8 +22,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".RegisterActivity"
-                  android:label="Sign Up To Be A Watcher For Lion City">
+        <activity
+            android:name=".RegisterActivity"
+            android:label="Sign Up To Be A Watcher For Lion City" >
+        </activity>
+        <activity android:name=".CameraActivity" >
         </activity>
     </application>
 
