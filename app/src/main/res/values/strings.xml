@@ -20,4 +20,9 @@
         completions."</string>
     <string name="dialog_title_error_register">Register encountered error</string>
     <string name="dialog_button_retry">Retry</string>
+    <string name="title_activity_main">MainActivity</string>
+
+    <!-- Strings related to report -->
+    <string name="new_report_title">Report New Incident</string>
+    <string name="report_description_hint">Enter some description of the incident</string>
 </resources>
