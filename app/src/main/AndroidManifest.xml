@@ -22,8 +22,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".RegisterActivity"
-                  android:label="Sign Up To Be A Watcher For Lion City">
+        <activity
+            android:name=".RegisterActivity"
+            android:label="Sign Up To Be A Watcher For Lion City" >
+        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/title_activity_main">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".ReportActivity"
+                  android:label="@string/new_report_title">
         </activity>
     </application>
 
