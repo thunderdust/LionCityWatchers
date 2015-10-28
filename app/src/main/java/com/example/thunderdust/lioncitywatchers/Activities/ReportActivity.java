@@ -12,10 +12,12 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.example.thunderdust.lioncitywatchers.Exceptions.ViewNotFoundException;
 import com.example.thunderdust.lioncitywatchers.R;
 import com.example.thunderdust.lioncitywatchers.Utils.DeviceStatusValidator;
+import com.example.thunderdust.lioncitywatchers.Utils.Toaster;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,6 +45,7 @@ public class ReportActivity extends Activity {
     private static final int ACTION_CHOOSE_FROM_GALLERY = 2;
     private static final int RESULT_OK = 1;
     private static final String ALBUM_NAME = "LionCityWatchers";
+    private static final String INSTAGRAM_SHARE_TYPE_IMAGE = "image/*";
     private AlbumStorageDirFactory mAlnumStorageDirFactory = null;
     private String mCurrentPhotoPath = null;
 
@@ -108,7 +111,7 @@ public class ReportActivity extends Activity {
         }
 
         if(mPostButton!=null){
-            mPostButton.setOnClickListener(new View.OnClickListener(){
+            mPostButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                 }
@@ -257,28 +260,23 @@ public class ReportActivity extends Activity {
         }
     }
 
+    /* Sharing post to SNS */
+    private void shareToSNS(){
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    private boolean shareToInstagram(){
-        return false;
-
+        if(mCurrentPhotoPath!=null){
+            File f = new File(mCurrentPhotoPath);
+            Uri uri = Uri.fromFile(f);
+            Intent share = new Intent(Intent.ACTION_SEND);
+            share.setType(INSTAGRAM_SHARE_TYPE_IMAGE);
+            share.putExtra(Intent.EXTRA_STREAM, uri);
+            //Broadcase the intent
+            startActivity(Intent.createChooser(share, "Share this report to"));
+        }
+        else {
+            // No current image
+            Toaster errorToaster = Toaster.getInstance();
+            errorToaster.ToastLongCenter(getBaseContext(),"No image available to share");
+        }
     }
 
     private boolean postNewReport(){
