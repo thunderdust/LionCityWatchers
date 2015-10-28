@@ -1,4 +1,4 @@
-package com.example.thunderdust.lioncitywatchers;
+package com.example.thunderdust.lioncitywatchers.Activities;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -15,6 +15,8 @@ import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.Button;
+
+import com.example.thunderdust.lioncitywatchers.R;
 
 public class RegisterActivity extends AppCompatActivity {
 

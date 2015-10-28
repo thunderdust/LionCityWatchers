@@ -1,4 +1,4 @@
-package com.example.thunderdust.lioncitywatchers;
+package com.example.thunderdust.lioncitywatchers.Activities;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -17,6 +17,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.content.Intent;
+
+import com.example.thunderdust.lioncitywatchers.R;
 
 /**
  * A login screen that offers login via email/password.

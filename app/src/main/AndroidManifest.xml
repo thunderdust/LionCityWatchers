@@ -14,7 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".LoginActivity"
+            android:name=".Activities.LoginActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -23,21 +23,21 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".RegisterActivity"
+            android:name=".Activities.RegisterActivity"
             android:label="Sign Up To Be A Watcher For Lion City" >
         </activity>
 <<<<<<< HEAD
-        <activity android:name=".CameraActivity" >
+        <activity android:name=".Activities.CameraActivity" >
 =======
         <activity
-            android:name=".MainActivity"
+            android:name=".Activities.MainActivity"
             android:label="@string/title_activity_main">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ReportActivity"
+        <activity android:name=".Activities.ReportActivity"
                   android:label="@string/new_report_title">
 >>>>>>> f9ef93aab7779feaf3b115c3ca3e6b1128f8cbce
         </activity>

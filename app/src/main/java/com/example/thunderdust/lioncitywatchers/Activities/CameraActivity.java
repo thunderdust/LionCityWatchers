@@ -1,7 +1,9 @@
-package com.example.thunderdust.lioncitywatchers;
+package com.example.thunderdust.lioncitywatchers.Activities;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+
+import com.example.thunderdust.lioncitywatchers.R;
 
 public class CameraActivity extends AppCompatActivity {
 
