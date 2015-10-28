@@ -5,8 +5,8 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -39,6 +39,9 @@ public class ReportActivity extends Activity {
     private static final String PHOTO_TIMESTAMP_FORMAT = "yyyyMMdd_HHmmss";
     private static final String JPEG_FILE_PREFIX = "IMG_";
     private static final String JPEG_FILE_SUFFIX = ".jpg";
+    private static final int ACTION_TAKE_PHOTO = 1;
+    private static final int ACTION_CHOOSE_FROM_GALLERY = 2;
+    private static final int RESULT_OK = 1;
     private static final String ALBUM_NAME = "LionCityWatchers";
     private AlbumStorageDirFactory mAlnumStorageDirFactory = null;
     private String mCurrentPhotoPath = null;
@@ -73,6 +76,7 @@ public class ReportActivity extends Activity {
             mCameraButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    dispatchCameraIntent();
                 }
             });
         }
@@ -203,6 +207,62 @@ public class ReportActivity extends Activity {
             throw new ViewNotFoundException("Incident image view does not exist.");
         }
     }
+
+    private void dispatchCameraIntent() {
+
+        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        File f = null;
+        try {
+            f = setUpImageFile();
+            cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(f));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            f = null;
+            mCurrentPhotoPath = null;
+        }
+        startActivityForResult(cameraIntent, ACTION_TAKE_PHOTO);
+    }
+
+    private void handleCameraPhoto(){
+        if(mCurrentPhotoPath!=null){
+            try{
+                updateIncidentImageView();
+                addPhotoToGallery();
+                mCurrentPhotoPath = null;
+            }
+            catch (ViewNotFoundException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        switch(requestCode){
+            case ACTION_CHOOSE_FROM_GALLERY:{
+                break;
+            }
+            case ACTION_TAKE_PHOTO:{
+                if (resultCode == RESULT_OK){
+                    handleCameraPhoto();
+                }
+                break;
+            }
+            default:{
+                break;
+            }
+        }
+    }
+
+
+
+
+
+
+
 
 
 
