@@ -1,7 +1,11 @@
 package com.example.thunderdust.lioncitywatchers.Activities;
 
 import android.app.Activity;
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -12,21 +16,24 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Button;
-import android.widget.Toast;
 
 import com.example.thunderdust.lioncitywatchers.Exceptions.ViewNotFoundException;
 import com.example.thunderdust.lioncitywatchers.R;
 import com.example.thunderdust.lioncitywatchers.Utils.DeviceStatusValidator;
 import com.example.thunderdust.lioncitywatchers.Utils.Toaster;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.places.Places;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class ReportActivity extends Activity {
+public class ReportActivity extends Activity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
-    //Device management
+    /* Device management */
     private DeviceStatusValidator mValidator = null;
     //UI components
     private EditText mIncidentDescriptionET;
@@ -36,8 +43,9 @@ public class ReportActivity extends Activity {
     private Button mShareButton;
     private Button mDiscardButton;
     private Button mPostButton;
+    private Toaster mToaster;
 
-    //Camera and photo
+    /* Camera and photo */
     private static final String PHOTO_TIMESTAMP_FORMAT = "yyyyMMdd_HHmmss";
     private static final String JPEG_FILE_PREFIX = "IMG_";
     private static final String JPEG_FILE_SUFFIX = ".jpg";
@@ -49,9 +57,18 @@ public class ReportActivity extends Activity {
     private AlbumStorageDirFactory mAlnumStorageDirFactory = null;
     private String mCurrentPhotoPath = null;
 
-    // Debug Settings
+    /* Debug Settings */
     private static final String DEBUG_TAG = "LionCityWathcers";
     private static final String ACTIVITY_TAG = "ReportActivity";
+
+    /* Google Geo Api */
+    private GoogleApiClient mGoogleApiClient;
+    // Bool to track whether the app is already resolving an error
+    private boolean mIsResolvingError = false;
+    // Request code to use when launching the resolution activity
+    private static final int REQUEST_RESOLVE_ERROR = 1001;
+    // Unique tag for the error dialog fragment
+    private static final String DIALOG_ERROR = "dialog_error";
 
 
     @Override
@@ -60,6 +77,28 @@ public class ReportActivity extends Activity {
         setContentView(R.layout.activity_report);
         initializeWidgets();
         initializeHelpers();
+        initializeGoogleApiClient();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Open connection only when location service is called
+        //mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onStop(){
+        mGoogleApiClient.disconnect();
+        super.onStop();
+    }
+
+    private void initializeGoogleApiClient(){
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                                              .addApi(Places.GEO_DATA_API)
+                                              .addApi(Places.PLACE_DETECTION_API)
+                                              .addConnectionCallbacks(this)
+                                              .addOnConnectionFailedListener(this).build();
     }
 
     private void initializeHelpers(){
@@ -74,6 +113,7 @@ public class ReportActivity extends Activity {
         mShareButton = (Button) findViewById(R.id.btn_report_share);
         mDiscardButton = (Button) findViewById(R.id.btn_report_discard);
         mPostButton = (Button) findViewById(R.id.btn_report_submit);
+        mToaster = Toaster.getInstance();
 
         if (mCameraButton!=null){
             mCameraButton.setOnClickListener(new View.OnClickListener() {
@@ -274,12 +314,80 @@ public class ReportActivity extends Activity {
         }
         else {
             // No current image
-            Toaster errorToaster = Toaster.getInstance();
-            errorToaster.ToastLongCenter(getBaseContext(),"No image available to share");
+            mToaster.ToastLongCenter(getBaseContext(), "No image available to share");
         }
     }
 
     private boolean postNewReport(){
         return false;
+    }
+
+    /* Implementing Google Api Client Connection Handle interfaces */
+    @Override
+    public void onConnected(Bundle connectionHint) {
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int cause) {
+        // Disable location UI components
+        // Until onConnected() is called
+
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        if (mIsResolvingError){
+            // Already attempting to resolve an error
+            return;
+        } else if (connectionResult.hasResolution()){
+            try {
+                mIsResolvingError = true;
+                connectionResult.startResolutionForResult(this, REQUEST_RESOLVE_ERROR);
+            }
+            catch (IntentSender.SendIntentException e) {
+                e.printStackTrace();
+                // There was an error with the resolution intent. Try again.
+                mGoogleApiClient.connect();
+            }
+        } else {
+            // Show dialog using GoogleApiAvailability.getErrorDialog()
+            showErrorDialog(connectionResult.getErrorCode());
+            mIsResolvingError = true;
+        }
+    }
+
+    /* Creates a dialog for an error message */
+    private void showErrorDialog(int errorCode) {
+        // Create a fragment for the error dialog
+        ErrorDialogFragment dialogFragment = new ErrorDialogFragment();
+        // Pass the error that should be displayed
+        Bundle args = new Bundle();
+        args.putInt(DIALOG_ERROR, errorCode);
+        dialogFragment.setArguments(args);
+        dialogFragment.show(getSupportFragmentManager(), "errordialog");
+    }
+
+    /* Called from ErrorDialogFragment when the dialog is dismissed. */
+    public void onDialogDismissed() {
+        mIsResolvingError = false;
+    }
+
+    /* A fragment to display an error dialog */
+    public static class ErrorDialogFragment extends DialogFragment {
+        public ErrorDialogFragment() { }
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Get the error code and retrieve the appropriate dialog
+            int errorCode = this.getArguments().getInt(DIALOG_ERROR);
+            return GoogleApiAvailability.getInstance().getErrorDialog(
+                    this.getActivity(), errorCode, REQUEST_RESOLVE_ERROR);
+        }
+
+        @Override
+        public void onDismiss(DialogInterface dialog) {
+            ((ReportActivity) getActivity()).onDialogDismissed();
+        }
     }
 }
