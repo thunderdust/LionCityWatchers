@@ -68,7 +68,7 @@ public class ReportActivity extends Activity implements GoogleApiClient.Connecti
     // Request code to use when launching the resolution activity
     private static final int REQUEST_RESOLVE_ERROR = 1001;
     // Unique tag for the error dialog fragment
-    private static final String DIALOG_ERROR = "dialog_error";
+    private static final String DIALOG_ERROR_TAG = "DIALOG_ERROR_TAG";
 
 
     @Override
@@ -363,9 +363,9 @@ public class ReportActivity extends Activity implements GoogleApiClient.Connecti
         ErrorDialogFragment dialogFragment = new ErrorDialogFragment();
         // Pass the error that should be displayed
         Bundle args = new Bundle();
-        args.putInt(DIALOG_ERROR, errorCode);
+        args.putInt(DIALOG_ERROR_TAG, errorCode);
         dialogFragment.setArguments(args);
-        dialogFragment.show(getSupportFragmentManager(), "errordialog");
+        dialogFragment.show(this.getFragmentManager(), DIALOG_ERROR_TAG);
     }
 
     /* Called from ErrorDialogFragment when the dialog is dismissed. */
@@ -380,7 +380,7 @@ public class ReportActivity extends Activity implements GoogleApiClient.Connecti
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             // Get the error code and retrieve the appropriate dialog
-            int errorCode = this.getArguments().getInt(DIALOG_ERROR);
+            int errorCode = this.getArguments().getInt(DIALOG_ERROR_TAG);
             return GoogleApiAvailability.getInstance().getErrorDialog(
                     this.getActivity(), errorCode, REQUEST_RESOLVE_ERROR);
         }
