@@ -9,15 +9,20 @@ import android.content.IntentSender;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Button;
 
 import com.example.thunderdust.lioncitywatchers.Exceptions.ViewNotFoundException;
+import com.example.thunderdust.lioncitywatchers.Media.AlbumStorageDirFactory;
+
+import com.example.thunderdust.lioncitywatchers.Media.BaseAlbumDirFactory;
+import com.example.thunderdust.lioncitywatchers.Media.FroyoAlbumDirFactory;
 import com.example.thunderdust.lioncitywatchers.R;
 import com.example.thunderdust.lioncitywatchers.Utils.DeviceStatusValidator;
 import com.example.thunderdust.lioncitywatchers.Utils.Toaster;
@@ -38,11 +43,11 @@ public class ReportActivity extends Activity implements GoogleApiClient.Connecti
     //UI components
     private EditText mIncidentDescriptionET;
     private ImageView mIncidentImageView;
-    private Button mCameraButton;
-    private Button mGalleryButton;
-    private Button mShareButton;
-    private Button mDiscardButton;
-    private Button mPostButton;
+    private FloatingActionButton mCameraButton;
+    private FloatingActionButton mGalleryButton;
+    private FloatingActionButton mShareButton;
+    private FloatingActionButton mDiscardButton;
+    private FloatingActionButton mPostButton;
     private Toaster mToaster;
 
     /* Camera and photo */
@@ -51,7 +56,6 @@ public class ReportActivity extends Activity implements GoogleApiClient.Connecti
     private static final String JPEG_FILE_SUFFIX = ".jpg";
     private static final int ACTION_TAKE_PHOTO = 1;
     private static final int ACTION_CHOOSE_FROM_GALLERY = 2;
-    private static final int RESULT_OK = 1;
     private static final String ALBUM_NAME = "LionCityWatchers";
     private static final String INSTAGRAM_SHARE_TYPE_IMAGE = "image/*";
     private AlbumStorageDirFactory mAlnumStorageDirFactory = null;
@@ -75,8 +79,9 @@ public class ReportActivity extends Activity implements GoogleApiClient.Connecti
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_report);
-        initializeWidgets();
+        // Validator must be initialized before widgets
         initializeHelpers();
+        initializeWidgets();
         initializeGoogleApiClient();
     }
 
@@ -107,13 +112,20 @@ public class ReportActivity extends Activity implements GoogleApiClient.Connecti
 
     private void initializeWidgets(){
         mIncidentDescriptionET = (EditText) findViewById(R.id.report_description);
+        mIncidentDescriptionET.clearFocus();
         mIncidentImageView = (ImageView) findViewById(R.id.report_image_view);
-        mCameraButton = (Button) findViewById(R.id.btn_camera);
-        mGalleryButton = (Button) findViewById(R.id.btn_gallery);
-        mShareButton = (Button) findViewById(R.id.btn_report_share);
-        mDiscardButton = (Button) findViewById(R.id.btn_report_discard);
-        mPostButton = (Button) findViewById(R.id.btn_report_submit);
+        mCameraButton = (FloatingActionButton) findViewById(R.id.btn_camera);
+        mGalleryButton = (FloatingActionButton) findViewById(R.id.btn_gallery);
+        mShareButton = (FloatingActionButton) findViewById(R.id.btn_report_share);
+        mDiscardButton = (FloatingActionButton) findViewById(R.id.btn_report_discard);
+        mPostButton = (FloatingActionButton) findViewById(R.id.btn_report_submit);
         mToaster = Toaster.getInstance();
+        if (mValidator.isDeviceUpdatedTo(Build.VERSION_CODES.FROYO)){
+            mAlnumStorageDirFactory = new FroyoAlbumDirFactory();
+        }
+        else {
+            mAlnumStorageDirFactory = new BaseAlbumDirFactory();
+        }
 
         if (mCameraButton!=null){
             mCameraButton.setOnClickListener(new View.OnClickListener() {
@@ -192,6 +204,7 @@ public class ReportActivity extends Activity implements GoogleApiClient.Connecti
     private File setUpImageFile() throws IOException {
         File imageFile = generatePhotoFile();
         mCurrentPhotoPath = imageFile.getAbsolutePath();
+        Log.d(DEBUG_TAG, "__________________________________PhotoPath: " + mCurrentPhotoPath);
         return imageFile;
     }
 
@@ -290,6 +303,7 @@ public class ReportActivity extends Activity implements GoogleApiClient.Connecti
             }
             case ACTION_TAKE_PHOTO:{
                 if (resultCode == RESULT_OK){
+                    Log.d(DEBUG_TAG, "Ready to process image");
                     handleCameraPhoto();
                 }
                 break;
