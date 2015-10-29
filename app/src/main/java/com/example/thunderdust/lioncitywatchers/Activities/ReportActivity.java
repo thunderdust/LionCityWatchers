@@ -164,6 +164,7 @@ public class ReportActivity extends Activity implements GoogleApiClient.Connecti
             mShareButton.setOnClickListener(new View.OnClickListener(){
                 @Override
                 public void onClick(View v) {
+                    Log.d(DEBUG_TAG,"_________________________________SHARE TO SNS");
                     shareToSNS();
                 }
             });
@@ -317,7 +318,7 @@ public class ReportActivity extends Activity implements GoogleApiClient.Connecti
             try{
                 updateIncidentImageView();
                 addPhotoToGallery();
-                mCurrentPhotoPath = null;
+                //mCurrentPhotoPath = null;
             }
             catch (ViewNotFoundException e) {
                 e.printStackTrace();
