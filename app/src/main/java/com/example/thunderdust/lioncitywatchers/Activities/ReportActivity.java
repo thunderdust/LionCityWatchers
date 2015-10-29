@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -60,6 +61,7 @@ public class ReportActivity extends Activity implements GoogleApiClient.Connecti
     private static final String INSTAGRAM_SHARE_TYPE_IMAGE = "image/*";
     private AlbumStorageDirFactory mAlnumStorageDirFactory = null;
     private String mCurrentPhotoPath = null;
+    private Bitmap mReportBitmap = null;
 
     /* Debug Settings */
     private static final String DEBUG_TAG = "LionCityWathcers";
@@ -83,6 +85,20 @@ public class ReportActivity extends Activity implements GoogleApiClient.Connecti
         initializeHelpers();
         initializeWidgets();
         initializeGoogleApiClient();
+    }
+
+    @Override
+    protected  void onDestroy(){
+        super.onDestroy();
+        // Recycle bitmap
+        recycleBitmap(mReportBitmap);
+        mIncidentImageView.setImageBitmap(null);
+        mCurrentPhotoPath = null;
+        // Disconnet and reset google API client
+        if ( mGoogleApiClient!=null){
+            mGoogleApiClient.disconnect();
+            mGoogleApiClient = null;
+        }
     }
 
     @Override
@@ -148,6 +164,7 @@ public class ReportActivity extends Activity implements GoogleApiClient.Connecti
             mShareButton.setOnClickListener(new View.OnClickListener(){
                 @Override
                 public void onClick(View v) {
+                    shareToSNS();
                 }
             });
         }
@@ -254,15 +271,30 @@ public class ReportActivity extends Activity implements GoogleApiClient.Connecti
                 // Deprecated after lollipop
                 bmOptions.inPurgeable = true;
             }*/
-            Bitmap bm = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+
+            recycleBitmap(mReportBitmap);
+            mReportBitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
 
             //Update incident image view
-            mIncidentImageView.setImageBitmap(bm);
+            mIncidentImageView.setImageBitmap(mReportBitmap);
             mIncidentImageView.setVisibility(View.VISIBLE);
         } else {
             throw new ViewNotFoundException("Incident image view does not exist.");
         }
     }
+
+    // For VERSIONS before honeycomb, bitmap recycle is necessary
+    private void recycleBitmap(Bitmap bm){
+        if(mValidator!=null){
+
+            if (!mValidator.isDeviceUpdatedTo(Build.VERSION_CODES.HONEYCOMB)){
+                if (bm!=null){
+                    bm.recycle();
+                }
+            }
+        }
+    }
+
 
     private void dispatchCameraIntent() {
 
