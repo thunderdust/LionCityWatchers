@@ -42,7 +42,9 @@ import com.google.android.gms.location.places.Places;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 
 public class ReportActivity extends Activity  {
 
@@ -200,6 +202,13 @@ public class ReportActivity extends Activity  {
             mPostButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    boolean isReportSubmitted = postNewReport();
+                    if (isReportSubmitted){
+                        mToaster.ToastLongCenter(getBaseContext(), "Report Submitted!");
+                    }
+                    else{
+                        mToaster.ToastLongCenter(getBaseContext(), "Report Submission Failed!");
+                    }
                 }
             });
         }
@@ -404,6 +413,57 @@ public class ReportActivity extends Activity  {
     }
 
     private boolean postNewReport(){
+        // Check for input fields: description and location are compulsory, photo is optional
+        boolean isValidPost = true;
+        boolean isPostWithPicture = false;
+        boolean shouldContinueCheck = false;
+        ArrayList<String> requiredFields = new ArrayList<String>();
+        String description;
+        // Check description text
+        if (mIncidentDescriptionET!=null){
+            description = mIncidentDescriptionET.getText().toString();
+            if (description!=null && !description.isEmpty()){
+                // Valid description
+                shouldContinueCheck = true;
+            }
+            else {
+                isValidPost = false;
+                requiredFields.add("Incident Description");
+                shouldContinueCheck = false;
+            }
+        }
+        // Check location
+        if (shouldContinueCheck){
+            if (mCurrentLocation!=null){
+                shouldContinueCheck = true;
+            }
+            else {
+                isValidPost = false;
+                shouldContinueCheck = false;
+                requiredFields.add("Incident Location");
+            }
+        }
+        // Check photo
+        if (shouldContinueCheck){
+            if (mCurrentPhotoPath!=null){
+                isPostWithPicture = true;
+            }
+        }
+        // Start to post
+        if (isValidPost){
+
+        }
+        // Invalid post: Display error message and cancel post
+        else {
+            Iterator<String> iterator = requiredFields.iterator();
+            String message = null;
+            while(iterator.hasNext()){
+                message += iterator.next() + " ";
+            }
+            message = "Invalid post request, missing " + message;
+            mToaster.ToastLongCenter(this, message);
+            return false;
+        }
         return false;
     }
 
