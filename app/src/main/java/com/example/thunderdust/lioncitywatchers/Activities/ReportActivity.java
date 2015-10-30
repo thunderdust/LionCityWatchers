@@ -3,6 +3,9 @@ package com.example.thunderdust.lioncitywatchers.Activities;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -376,6 +379,16 @@ public class ReportActivity extends Activity  {
     private void shareToSNS(){
 
         if(mCurrentPhotoPath!=null){
+            // Copy description to clipboard
+            if (mIncidentDescriptionET!=null){
+                String description = mIncidentDescriptionET.getText().toString();
+                if (description!= null && !description.isEmpty()){
+                    ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                    ClipData clip = ClipData.newPlainText("description", description);
+                    cm.setPrimaryClip(clip);
+                    mToaster.ToastLongBottom(this, "Incident description has been copied to clipboard.");
+                }
+            }
             File f = new File(mCurrentPhotoPath);
             Uri uri = Uri.fromFile(f);
             Intent share = new Intent(Intent.ACTION_SEND);
