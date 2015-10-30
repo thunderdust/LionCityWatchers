@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -31,6 +32,7 @@ import com.example.thunderdust.lioncitywatchers.Media.AlbumStorageDirFactory;
 
 import com.example.thunderdust.lioncitywatchers.Media.BaseAlbumDirFactory;
 import com.example.thunderdust.lioncitywatchers.Media.FroyoAlbumDirFactory;
+import com.example.thunderdust.lioncitywatchers.Media.ImagePathFinder;
 import com.example.thunderdust.lioncitywatchers.R;
 import com.example.thunderdust.lioncitywatchers.Utils.DeviceStatusValidator;
 import com.example.thunderdust.lioncitywatchers.Utils.Toaster;
@@ -40,7 +42,9 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.places.Places;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -224,7 +228,8 @@ public class ReportActivity extends Activity  {
     }
 
 
-    /***************** BEGIN Camera related methods ************************/
+    /******************************* BEGIN Camera & Gallery related methods ************************/
+
     private File generatePhotoFile() throws IOException {
         // Name based on timestamp
         String timeStamp = new SimpleDateFormat(PHOTO_TIMESTAMP_FORMAT).format(new Date());
@@ -263,7 +268,6 @@ public class ReportActivity extends Activity  {
 
     // According to mCurrentPhotoPath, return the image file
     private File getCurrentPhoto() {
-
         return new File(mCurrentPhotoPath);
     }
 
@@ -279,7 +283,7 @@ public class ReportActivity extends Activity  {
             throw new Exception("Current photo does not exist");
     }
 
-    private void updateIncidentImageView() throws ViewNotFoundException {
+    private void updateIncidentImageViewWithCameraPhoto() throws ViewNotFoundException {
 
         if(mIncidentImageView!=null){
             /* Get image view dimensions */
@@ -309,7 +313,9 @@ public class ReportActivity extends Activity  {
                 bmOptions.inPurgeable = true;
             }*/
 
+            mIncidentImageView.setImageBitmap(null);
             recycleBitmap(mReportBitmap);
+            mReportBitmap = null;
             mReportBitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
 
             //Update incident image view
@@ -318,6 +324,13 @@ public class ReportActivity extends Activity  {
         } else {
             throw new ViewNotFoundException("Incident image view does not exist.");
         }
+    }
+
+    private void updateIncidentImageViewWithGalleryPhoto(Uri selectedImageUri) throws FileNotFoundException {
+
+        InputStream imageStream = getContentResolver().openInputStream(selectedImageUri);
+        Bitmap bm = BitmapFactory.decodeStream(imageStream);
+
     }
 
     // For VERSIONS before honeycomb, bitmap recycle is necessary
@@ -331,7 +344,6 @@ public class ReportActivity extends Activity  {
             }
         }
     }
-
 
     private void dispatchCameraIntent() {
 
@@ -349,10 +361,35 @@ public class ReportActivity extends Activity  {
         startActivityForResult(cameraIntent, ACTION_TAKE_PHOTO);
     }
 
+    private void dispatchGalleryIntent() {
+
+        Intent pickFromGalleryIntent = new Intent(Intent.ACTION_PICK);
+        pickFromGalleryIntent.setType("image/*");
+        startActivityForResult(pickFromGalleryIntent, ACTION_CHOOSE_FROM_GALLERY);
+    }
+
+    private void processGalleryImage(Uri selectedImageUri) {
+
+        ImagePathFinder ipf = ImagePathFinder.getInstance();
+        // Get image path based on Android versions
+        if (mValidator!=null){
+            if (mValidator.isDeviceUpdatedTo(Build.VERSION_CODES.KITKAT)){
+                mCurrentPhotoPath = ipf.getRealPathFromURI_API19(this, selectedImageUri);
+            }
+            else if (mValidator.isDeviceUpdatedTo(Build.VERSION_CODES.HONEYCOMB)){
+                mCurrentPhotoPath = ipf.getRealPathFromURI_API11To18(this, selectedImageUri);
+            }
+            else {
+                mCurrentPhotoPath = ipf.getRealPathFromURI_APIBefore11(this, selectedImageUri);
+            }
+        }
+    }
+
+
     private void handleCameraPhoto(){
         if(mCurrentPhotoPath!=null){
             try{
-                updateIncidentImageView();
+                updateIncidentImageViewWithCameraPhoto();
                 addPhotoToGallery();
                 //mCurrentPhotoPath = null;
             }
@@ -363,17 +400,40 @@ public class ReportActivity extends Activity  {
             }
         }
     }
-    /************** END Camera related methods ************************/
+
+    private void handleGalleryPhoto(Uri selectedImageUri){
+        if(mCurrentPhotoPath!=null){
+            try {
+                updateIncidentImageViewWithGalleryPhoto(selectedImageUri);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /********************************* END Camera & Gallery related methods ************************/
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
         switch(requestCode){
             case ACTION_CHOOSE_FROM_GALLERY:{
+                if (resultCode == RESULT_OK){
+                    Log.d(DEBUG_TAG, "Got image from gallery");
+                    Uri selectedImageUri = data.getData();
+                    processGalleryImage(selectedImageUri);
+                    try {
+
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    handleGalleryPhoto();
+                }
                 break;
             }
             case ACTION_TAKE_PHOTO:{
                 if (resultCode == RESULT_OK){
-                    Log.d(DEBUG_TAG, "Ready to process image");
+                    Log.d(DEBUG_TAG, "Captured image by camera");
                     handleCameraPhoto();
                 }
                 break;
@@ -383,6 +443,12 @@ public class ReportActivity extends Activity  {
             }
         }
     }
+
+
+
+
+
+    /******************************* FLOATING ACTION BUTTONS MENU FUNCTIONS ************************/
 
     /* Sharing post to SNS */
     private void shareToSNS(){
