@@ -24,7 +24,8 @@
             android:inputType="textCapSentences|textMultiLine"
             android:hint="@string/report_description_hint"
             android:padding="@dimen/textbox_padding"
-            android:background="@color/colorTextBackground">
+            android:background="@color/colorTextBackground"
+            android:visibility="invisible">
         </EditText>
 
         <LinearLayout
@@ -56,6 +57,16 @@
 
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/textview_location"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:minLines="1"
+            android:maxLines="2"
+            android:clickable="true"
+            android:editable="false"
+            android:background="@color/colorTextBackground"/>
+
         <!-- Dummy item to prevent AutoCompleteTextView from receiving focus -->
         <LinearLayout
             android:focusable="true" android:focusableInTouchMode="true"
@@ -65,9 +76,10 @@
               to prevent the dummy from receiving focus again -->
         <ImageView
             android:id="@+id/report_image_view"
-            android:layout_height="250dp"
+            android:layout_height="wrap_content"
+            android:minHeight="200dp"
             android:layout_width="fill_parent"
-            android:background="@color/colorTextBackground"
+            android:background="#FFFFFF"
             android:nextFocusUp="@id/report_image_view"
             android:nextFocusLeft="@id/report_image_view"
             android:visibility="invisible">
@@ -78,7 +90,9 @@
     <RelativeLayout
         android:id="@+id/layout_report_handle"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
+        android:layout_height="fill_parent"
+        android:gravity="bottom"
+        android:layout_margin="10dp">
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/btn_report_submit"

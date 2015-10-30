@@ -17,8 +17,10 @@ import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.example.thunderdust.lioncitywatchers.Exceptions.ViewNotFoundException;
 import com.example.thunderdust.lioncitywatchers.GoogleApi.GoogleApiHelper;
@@ -45,9 +47,11 @@ public class ReportActivity extends Activity  {
     private DeviceStatusValidator mValidator = null;
     //UI components
     private EditText mIncidentDescriptionET;
+    private TextView mLocationTextView;
     private ImageView mIncidentImageView;
-    private FloatingActionButton mCameraButton;
-    private FloatingActionButton mGalleryButton;
+    private Button mCameraButton;
+    private Button mGalleryButton;
+    private Button mLocationButton;
     private FloatingActionButton mShareButton;
     private FloatingActionButton mDiscardButton;
     private FloatingActionButton mPostButton;
@@ -65,7 +69,7 @@ public class ReportActivity extends Activity  {
     private String mCurrentPhotoPath = null;
     private Bitmap mReportBitmap = null;
 
-    /* Location Services */
+    /* Location */
     private GoogleApiHelper mGoogleApiHelper = null;
     private Location mCurrentLocation = null;
 
@@ -119,9 +123,11 @@ public class ReportActivity extends Activity  {
 
         mIncidentDescriptionET = (EditText) findViewById(R.id.report_description);
         mIncidentDescriptionET.clearFocus();
+        mLocationTextView = (TextView) findViewById(R.id.textview_location);
         mIncidentImageView = (ImageView) findViewById(R.id.report_image_view);
-        mCameraButton = (FloatingActionButton) findViewById(R.id.btn_camera);
-        mGalleryButton = (FloatingActionButton) findViewById(R.id.btn_gallery);
+        mCameraButton = (Button) findViewById(R.id.btn_camera);
+        mGalleryButton = (Button) findViewById(R.id.btn_gallery);
+        mLocationButton = (Button) findViewById(R.id.btn_location);
         mShareButton = (FloatingActionButton) findViewById(R.id.btn_report_share);
         mDiscardButton = (FloatingActionButton) findViewById(R.id.btn_report_discard);
         mPostButton = (FloatingActionButton) findViewById(R.id.btn_report_submit);
@@ -136,7 +142,7 @@ public class ReportActivity extends Activity  {
         }
 
         if (mCameraButton!=null){
-            mCameraButton.setOnClickListener(new View.OnClickListener() {
+            mCameraButton.setOnClickListener(new Button.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     dispatchCameraIntent();
@@ -145,9 +151,24 @@ public class ReportActivity extends Activity  {
         }
 
         if(mGalleryButton!=null){
-            mGalleryButton.setOnClickListener(new View.OnClickListener(){
+            mGalleryButton.setOnClickListener(new Button.OnClickListener(){
                 @Override
                 public void onClick(View v) {
+                }
+            });
+        }
+
+        if(mLocationButton!=null){
+            mLocationButton.setOnClickListener(new Button.OnClickListener(){
+                @Override
+                public void onClick(View v) {
+                    mCurrentLocation = mGoogleApiHelper.getLastKnownLocation();
+                    if (mCurrentLocation!=null){
+                        Log.d(DEBUG_TAG, "Location obtained, altitude: "+ mCurrentLocation.getAltitude() + "latitude: " + mCurrentLocation.getAltitude());
+                        updateLocationTextView();
+                    } else{
+                        Log.d(DEBUG_TAG, "Failed to get current location");
+                    }
                 }
             });
         }
@@ -373,5 +394,10 @@ public class ReportActivity extends Activity  {
         return false;
     }
 
-
+    private void updateLocationTextView() {
+        if (mLocationTextView!=null && mCurrentLocation!=null){
+            String locationDescription = "Current Location: " + mCurrentLocation.getAltitude() + ", " + mCurrentLocation.getLatitude();
+            mLocationTextView.setText(locationDescription);
+        }
+    }
 }
