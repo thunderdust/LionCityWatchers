@@ -9,6 +9,7 @@ import android.content.IntentSender;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,6 +21,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 
 import com.example.thunderdust.lioncitywatchers.Exceptions.ViewNotFoundException;
+import com.example.thunderdust.lioncitywatchers.GoogleApi.GoogleApiHelper;
 import com.example.thunderdust.lioncitywatchers.Media.AlbumStorageDirFactory;
 
 import com.example.thunderdust.lioncitywatchers.Media.BaseAlbumDirFactory;
@@ -63,6 +65,10 @@ public class ReportActivity extends Activity  {
     private String mCurrentPhotoPath = null;
     private Bitmap mReportBitmap = null;
 
+    /* Location Services */
+    private GoogleApiHelper mGoogleApiHelper = null;
+    private Location mCurrentLocation = null;
+
     /* Debug Settings */
     private static final String DEBUG_TAG = "LionCityWathcers";
     private static final String ACTIVITY_TAG = "ReportActivity";
@@ -80,36 +86,37 @@ public class ReportActivity extends Activity  {
     @Override
     protected  void onDestroy(){
         super.onDestroy();
+        Log.d(DEBUG_TAG, "Destroy activity");
         // Recycle bitmap
         recycleBitmap(mReportBitmap);
         mIncidentImageView.setImageBitmap(null);
         mCurrentPhotoPath = null;
         // Disconnet and reset google API client
-        if ( mGoogleApiClient!=null){
-            mGoogleApiClient.disconnect();
-            mGoogleApiClient = null;
-        }
+        mGoogleApiHelper.clientDisconnect();
+        mGoogleApiHelper = null;
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        // Open connection only when location service is called
-        mGoogleApiClient.connect();
+    protected void onResume(){
+        super.onResume();
+        mGoogleApiHelper.clientConnect();
     }
 
     @Override
     protected void onStop(){
-        mGoogleApiClient.disconnect();
+        mGoogleApiHelper.clientDisconnect();
         super.onStop();
     }
 
-
     private void initializeHelpers(){
+
         mValidator = DeviceStatusValidator.getInstance();
+        // GoogleApiClient is automatically connect when create new instance of GoogleApiHelper
+        mGoogleApiHelper = new GoogleApiHelper(this);
     }
 
     private void initializeWidgets(){
+
         mIncidentDescriptionET = (EditText) findViewById(R.id.report_description);
         mIncidentDescriptionET.clearFocus();
         mIncidentImageView = (ImageView) findViewById(R.id.report_image_view);
@@ -119,6 +126,8 @@ public class ReportActivity extends Activity  {
         mDiscardButton = (FloatingActionButton) findViewById(R.id.btn_report_discard);
         mPostButton = (FloatingActionButton) findViewById(R.id.btn_report_submit);
         mToaster = Toaster.getInstance();
+
+        // Determine album directory based on Android version
         if (mValidator.isDeviceUpdatedTo(Build.VERSION_CODES.FROYO)){
             mAlnumStorageDirFactory = new FroyoAlbumDirFactory();
         }
@@ -147,7 +156,7 @@ public class ReportActivity extends Activity  {
             mShareButton.setOnClickListener(new View.OnClickListener(){
                 @Override
                 public void onClick(View v) {
-                    Log.d(DEBUG_TAG,"_________________________________SHARE TO SNS");
+                    Log.d(DEBUG_TAG,"_____________SHARE TO SNS");
                     shareToSNS();
                 }
             });
@@ -172,7 +181,17 @@ public class ReportActivity extends Activity  {
         }
     }
 
-    /***************** Camera related methods ************************/
+    private Location getCurrentLocation(){
+        if(mGoogleApiHelper!=null && mGoogleApiHelper.isClientConnected()){
+            return mGoogleApiHelper.getLastKnownLocation();
+        }
+        else{
+            return null;
+        }
+    }
+
+
+    /***************** BEGIN Camera related methods ************************/
     private File generatePhotoFile() throws IOException {
         // Name based on timestamp
         String timeStamp = new SimpleDateFormat(PHOTO_TIMESTAMP_FORMAT).format(new Date());
@@ -205,12 +224,13 @@ public class ReportActivity extends Activity  {
     private File setUpImageFile() throws IOException {
         File imageFile = generatePhotoFile();
         mCurrentPhotoPath = imageFile.getAbsolutePath();
-        Log.d(DEBUG_TAG, "__________________________________PhotoPath: " + mCurrentPhotoPath);
+        Log.d(DEBUG_TAG, "______________PhotoPath: " + mCurrentPhotoPath);
         return imageFile;
     }
 
     // According to mCurrentPhotoPath, return the image file
     private File getCurrentPhoto() {
+
         return new File(mCurrentPhotoPath);
     }
 
@@ -310,6 +330,7 @@ public class ReportActivity extends Activity  {
             }
         }
     }
+    /************** END Camera related methods ************************/
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
